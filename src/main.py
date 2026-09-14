@@ -1,7 +1,11 @@
-from fastapi import FastAPI
+import json
+
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 app = FastAPI()
+
+VALID_STATUSES = ("unread", "reading", "finished")
 
 SEED_BOOKS = [
     {"id": 1, "title": "The Silent Planet", "author": "Mira Cole", "status": "unread"},
@@ -75,3 +79,78 @@ def get_book(book_id: str):
     if book is None:
         return JSONResponse(status_code=404, content={"error": "Book not found"})
     return book
+
+
+async def _parse_json_object(request: Request):
+    """Returns the parsed JSON object, or None if malformed/non-object (rule 21/29)."""
+    try:
+        parsed = json.loads(await request.body())
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    if not isinstance(parsed, dict):
+        return None
+    return parsed
+
+
+def _validate_length_bound_string(value_present, value, field_label, min_len, max_len):
+    """Validates title/author per rule 24/25. Returns an error message or None."""
+    length_error = f"{field_label} must be between {min_len} and {max_len} characters"
+    if not value_present:
+        return length_error
+    if not isinstance(value, str):
+        return "Invalid request body"
+    trimmed = value.strip()
+    if len(trimmed) < min_len or len(trimmed) > max_len:
+        return length_error
+    return None
+
+
+@app.post("/books")
+async def create_book(request: Request):
+    # rule 21
+    body = await _parse_json_object(request)
+    if body is None:
+        return JSONResponse(status_code=400, content={"error": "Invalid request body"})
+
+    # rule 22
+    allowed_fields = {"title", "author", "status"}
+    unexpected_fields = sorted(field for field in body if field not in allowed_fields)
+    if unexpected_fields:
+        return JSONResponse(
+            status_code=400,
+            content={"error": f"Unexpected field: {unexpected_fields[0]}"},
+        )
+
+    # rule 23-24
+    title_error = _validate_length_bound_string(
+        "title" in body, body.get("title"), "Title", 1, 200
+    )
+    if title_error:
+        return JSONResponse(status_code=400, content={"error": title_error})
+
+    # rule 25
+    author_error = _validate_length_bound_string(
+        "author" in body, body.get("author"), "Author", 1, 100
+    )
+    if author_error:
+        return JSONResponse(status_code=400, content={"error": author_error})
+
+    # rule 26
+    status_value = body.get("status")
+    if status_value not in VALID_STATUSES:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Status must be one of: unread, reading, finished"},
+        )
+
+    # rule 27
+    global next_id
+    new_book = {
+        "id": next_id,
+        "title": body["title"].strip(),
+        "author": body["author"].strip(),
+        "status": status_value,
+    }
+    books.append(new_book)
+    next_id += 1
+    return JSONResponse(status_code=201, content=new_book)
