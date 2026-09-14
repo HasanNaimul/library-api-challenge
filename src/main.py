@@ -154,3 +154,39 @@ async def create_book(request: Request):
     books.append(new_book)
     next_id += 1
     return JSONResponse(status_code=201, content=new_book)
+
+
+@app.patch("/books/{book_id}")
+async def patch_book(book_id: str, request: Request):
+    # rule 28
+    parsed_id = _parse_book_id(book_id)
+    if parsed_id is None:
+        return JSONResponse(status_code=400, content={"error": "Invalid book id"})
+    book = _find_book(parsed_id)
+    if book is None:
+        return JSONResponse(status_code=404, content={"error": "Book not found"})
+
+    # rule 29
+    body = await _parse_json_object(request)
+    if body is None:
+        return JSONResponse(status_code=400, content={"error": "Invalid request body"})
+
+    # rule 31a
+    if any(field != "status" for field in body):
+        return JSONResponse(status_code=400, content={"error": "Only status may be updated"})
+
+    # rule 31b
+    if "status" not in body:
+        return JSONResponse(status_code=400, content={"error": "Status is required"})
+
+    # rule 31c
+    status_value = body["status"]
+    if status_value not in VALID_STATUSES:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Status must be one of: unread, reading, finished"},
+        )
+
+    # rule 31d
+    book["status"] = status_value
+    return book
