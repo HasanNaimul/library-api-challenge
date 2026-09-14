@@ -1,7 +1,7 @@
 import json
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 app = FastAPI()
 
@@ -190,3 +190,18 @@ async def patch_book(book_id: str, request: Request):
     # rule 31d
     book["status"] = status_value
     return book
+
+
+@app.delete("/books/{book_id}")
+def delete_book(book_id: str):
+    # rule 32
+    parsed_id = _parse_book_id(book_id)
+    if parsed_id is None:
+        return JSONResponse(status_code=400, content={"error": "Invalid book id"})
+    book = _find_book(parsed_id)
+    if book is None:
+        return JSONResponse(status_code=404, content={"error": "Book not found"})
+
+    # rule 33
+    books.remove(book)
+    return Response(status_code=204)
