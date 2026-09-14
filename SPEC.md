@@ -34,6 +34,14 @@ body.
   runtime project.
 - Nothing else exists yet. The following will be created by the Tasks below:
   - `requirements.txt` — dependency list.
+  - `pytest.ini` — minimal pytest configuration (`[pytest]` with
+    `pythonpath = .`) that puts the repository root on Python's import
+    path. Without it, the literal command `pytest -q` (run as the
+    installed console script, not via `python -m pytest`) fails to
+    resolve `from src.main import ...` in a clean clone, even though the
+    same test suite passes under `python -m pytest -q`. This file makes
+    the spec's required `pytest -q` command behave identically in a
+    fresh clone and in an existing checkout.
   - `tests/test_api.py` — acceptance tests, written before implementation.
   - `src/__init__.py` — empty, makes `src` an importable package.
   - `src/main.py` — the entire application (FastAPI app instance, in-memory
@@ -253,13 +261,25 @@ small, independently reviewable subtasks per endpoint.
 - `requirements.txt` listing `fastapi`, `uvicorn`, `pytest`, `httpx` — all
   four added now, since Task 2's manual verification needs `uvicorn` to
   run the server, not just import it.
+- `pytest.ini` containing exactly:
+
+  ```ini
+  [pytest]
+  pythonpath = .
+  ```
+
+  This is required for acceptance-test execution: it puts the repository
+  root on Python's import path so the literal `pytest -q` command
+  resolves `tests/test_api.py`'s `from src.main import ...` from any
+  clean clone, not just from an environment where `python -m pytest` was
+  used or the root happened to already be on `sys.path`.
 - An autouse, function-scoped pytest fixture that resets the
   application's in-memory state to the clean seed before **every** test:
   exactly 5 books, ids `1`–`5`, next id `6`. The fixture calls an internal
   reset mechanism in `src.main` (a plain Python function/state reset, not
   an HTTP route) — no reset endpoint is added to the API.
 
-**Touches:** `tests/test_api.py`, `requirements.txt`
+**Touches:** `tests/test_api.py`, `requirements.txt`, `pytest.ini`
 
 **Verify:**
 - At least one test function exists for each endpoint: `GET /books`,
