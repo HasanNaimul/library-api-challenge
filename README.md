@@ -4,20 +4,20 @@ A specification-driven FastAPI exercise for managing an in-memory collection of 
 
 ## Where is the implementation?
 
-The default branch holds [SPEC.md](SPEC.md). The completed implementation and its tests are on the existing **`hasan-naimul-w2d1-challenge`** branch:
+The API source, tests and [specification](SPEC.md) are included in the repository. The historical **`hasan-naimul-w2d1-challenge`** branch is retained:
 
 - [Browse the implementation](https://github.com/HasanNaimul/library-api-challenge/tree/hasan-naimul-w2d1-challenge)
-- [Application source](https://github.com/HasanNaimul/library-api-challenge/blob/hasan-naimul-w2d1-challenge/src/main.py)
-- [Acceptance tests](https://github.com/HasanNaimul/library-api-challenge/blob/hasan-naimul-w2d1-challenge/tests/test_api.py)
+- [Application source](src/main.py)
+- [Acceptance tests](tests/test_api.py)
 
-This introduction does not merge branches or change the default branch.
+The implementation and test files were copied unchanged from the historical implementation branch; historical commits were not rewritten.
 
 ## Run the implementation
 
-Clone the implementation branch directly:
+Clone the repository:
 
 ```bash
-git clone --branch hasan-naimul-w2d1-challenge https://github.com/HasanNaimul/library-api-challenge.git
+git clone https://github.com/HasanNaimul/library-api-challenge.git
 cd library-api-challenge
 python -m venv .venv
 ```
@@ -53,7 +53,7 @@ For POST requests, use the interactive docs with:
 
 ## Verification
 
-On the implementation branch:
+Run from the repository root:
 
 ```bash
 python -m pytest -q
@@ -65,4 +65,4 @@ All **91 existing acceptance tests passed** in the October 2026 review at implem
 
 The service starts with five synthetic books and stores changes in process memory. Restarting the process resets the collection. There is no authentication, persistent database or multi-process consistency guarantee. It is a local learning application, not a production library service.
 
-The existing specification, implementation, tests and history are preserved. The original implementation README retains its historical instructions; the commands above specify the actual repository and branch. Future work could include pinned dependencies and persistent storage, with explicit changes to the current contract.
+The existing specification and original historical branch are preserved. The application and test blobs were imported unchanged. Future work could include pinned dependencies and persistent storage, with explicit changes to the current contract.
